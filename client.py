@@ -40,8 +40,16 @@ class MainNamespace(BaseNamespace):
         elif relay==4:
             GPIO.output(pin_relay_4, not GPIO.input(pin_relay_4))
 
-    	self.emit('relay', {'relay': message['relay']})
+        self.emit('relay', {'relay': message['relay']})
 
+    def on_relay_data(self):
+        data = {
+            'relay_1': GPIO.input(pin_relay_1),
+            'relay_2': GPIO.input(pin_relay_2),
+            'relay_3': GPIO.input(pin_relay_3),
+            'relay_4': GPIO.input(pin_relay_4),
+        }
+        self.emit('relay_data', data)
 
 socketIO = SocketIO('http://ojixzzz.science', 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
