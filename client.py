@@ -67,17 +67,21 @@ class MainNamespace(BaseNamespace):
         self.emit('relay_data', data)
 
     def arduino_thread(self):
+        lastTemp = 0
         while 1:
             x=arduino_ser.readline()
             if x:
                 datajson = json.loads(x)
                 data = datajson.get('data')
                 if data:
-                    datas = {
-                        'temp': data.get('temp'),
-                    }
-                    self.emit('sensor_data', datas)
-            time.sleep(3)
+                    tempNow = data.get('temp')
+                    if tempNow!=lastTemp:
+                        datas = {
+                            'temp': tempNow,
+                        }
+                        self.emit('sensor_data', datas)
+                    lastTemp = tempNow
+            time.sleep(1)
 
 socketIO = SocketIO('http://ojixzzz.science', 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
