@@ -71,7 +71,10 @@ class MainNamespace(BaseNamespace):
         while 1:
             x=arduino_ser.readline()
             if x:
-                datajson = json.loads(x)
+                try:
+                    datajson = json.loads(x)
+                except Exception as e:
+                    datajson = Null
                 data = datajson.get('data')
                 if data:
                     tempNow = data.get('temp')
