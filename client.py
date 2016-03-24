@@ -1,16 +1,28 @@
 from threading import Thread
 from socketIO_client import SocketIO, BaseNamespace
 import RPi.GPIO as GPIO
+import os
 import time
 import serial
 import json
+import requests
+import picamera
+from fractions import Fraction
+from random import randint
 
+camera = picamera.PiCamera()
+camera.vflip = True
+camera.iso = 0
+
+URL_SITE = 'http://ojixzzz.science'
 pin_relay_1 = 18
 pin_relay_2 = 17 
 pin_relay_3 = 27
 pin_relay_4 = 22
+pin_pir = 23
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(pin_pir, GPIO.IN, GPIO.PUD_DOWN)
 GPIO.setup(pin_relay_1, GPIO.OUT)
 GPIO.setup(pin_relay_2, GPIO.OUT)
 GPIO.setup(pin_relay_3, GPIO.OUT)
@@ -68,13 +80,16 @@ class MainNamespace(BaseNamespace):
 
     def arduino_thread(self):
         lastTemp = 0
+        previous_state = False
+        current_state = False
+        gambar_count = 1
         while 1:
             x=arduino_ser.readline()
             if x:
                 try:
                     datajson = json.loads(x)
                 except Exception as e:
-                    datajson = Null
+                    datajson = {'x': 0}
                 data = datajson.get('data')
                 if data:
                     tempNow = data.get('temp')
@@ -84,8 +99,23 @@ class MainNamespace(BaseNamespace):
                         }
                         self.emit('sensor_data', datas)
                     lastTemp = tempNow
+            
+            previous_state = current_state
+            current_state = GPIO.input(pin_pir)
+            if current_state != previous_state:
+                if current_state:
+                    if gambar_count > 9:
+                        gambar_count = 1
+                    filerand = 'gambar%s.jpg' % gambar_count
+                    camera.capture(filerand)
+                    filep = open(filerand, 'rb')
+                    url = '%s:4855/upload_image' % URL_SITE
+                    r_req = requests.post(url, files={'file': filep})
+                    filep.close()
+                    os.remove(filerand)
+                    gambar+=1
             time.sleep(1)
 
-socketIO = SocketIO('http://ojixzzz.science', 4855)
+socketIO = SocketIO(URL_SITE, 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
-socketIO.wait()
+socketIO.wait(seconds=5)
