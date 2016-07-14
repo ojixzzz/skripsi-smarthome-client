@@ -1,12 +1,20 @@
 from socketIO_client import SocketIO, BaseNamespace
 import RPi.GPIO as GPIO
 
+import os
+import time
+import serial
+import json
+import requests
+
+URL_SITE = 'http://ojixzzz.science'
 pin_relay_1 = 18
 pin_relay_2 = 17 
 pin_relay_3 = 27
 pin_relay_4 = 22
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(pin_pir, GPIO.IN, GPIO.PUD_DOWN)
 GPIO.setup(pin_relay_1, GPIO.OUT)
 GPIO.setup(pin_relay_2, GPIO.OUT)
 GPIO.setup(pin_relay_3, GPIO.OUT)
@@ -50,6 +58,6 @@ class MainNamespace(BaseNamespace):
         }
         self.emit('relay_data', data)
 
-socketIO = SocketIO('http://ojixzzz.science', 4855)
+socketIO = SocketIO(URL_SITE, 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
-socketIO.wait()
+socketIO.wait(seconds=5)
