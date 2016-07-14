@@ -14,7 +14,6 @@ pin_relay_3 = 27
 pin_relay_4 = 22
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(pin_pir, GPIO.IN, GPIO.PUD_DOWN)
 GPIO.setup(pin_relay_1, GPIO.OUT)
 GPIO.setup(pin_relay_2, GPIO.OUT)
 GPIO.setup(pin_relay_3, GPIO.OUT)
