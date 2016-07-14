@@ -1,9 +1,5 @@
-from threading import Thread
 from socketIO_client import SocketIO, BaseNamespace
 import RPi.GPIO as GPIO
-import time
-import serial
-import json
 
 pin_relay_1 = 18
 pin_relay_2 = 17 
@@ -20,27 +16,15 @@ GPIO.output(pin_relay_2, True)
 GPIO.output(pin_relay_3, True)
 GPIO.output(pin_relay_4, True)
 
-arduino_ser = serial.Serial(
-	port='/dev/ttyAMA0',
-	baudrate = 9600,
-	parity=serial.PARITY_NONE,
-	stopbits=serial.STOPBITS_ONE,
-	bytesize=serial.EIGHTBITS,
-	timeout=1)
-
 class MainNamespace(BaseNamespace):
 
-    t = None
     def on_msg(self, *args):
         print('on_message', args)
 
     def on_connect(self):
-        t = Thread(target=self.arduino_thread)
-        t.start()
         print('[Connected]')
 
     def on_disconnect(self):
-        t.stop()
         print('[DisConnected]')
 
     def on_relay(self, *args):
@@ -65,23 +49,6 @@ class MainNamespace(BaseNamespace):
             'relay_4': GPIO.input(pin_relay_4),
         }
         self.emit('relay_data', data)
-
-    def arduino_thread(self):
-        lastTemp = 0
-        while 1:
-            x=arduino_ser.readline()
-            if x:
-                datajson = json.loads(x)
-                data = datajson.get('data')
-                if data:
-                    tempNow = data.get('temp')
-                    if tempNow!=lastTemp:
-                        datas = {
-                            'temp': tempNow,
-                        }
-                        self.emit('sensor_data', datas)
-                    lastTemp = tempNow
-            time.sleep(1)
 
 socketIO = SocketIO('http://ojixzzz.science', 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
