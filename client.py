@@ -59,4 +59,4 @@ class MainNamespace(BaseNamespace):
 
 socketIO = SocketIO(URL_SITE, 4855)
 main_namespace = socketIO.define(MainNamespace, '/socket_rpi')
-socketIO.wait(seconds=5)
+socketIO.wait()
